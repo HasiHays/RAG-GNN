@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "RAG-GNN: Retrieval-Augmented Graph Neural Networks for Biological Network Analysis"
+version: 0.1.0
+date-released: 2025-01-17
+url: "https://github.com/hasihays/RAG-GNN"
+repository-code: "https://github.com/hasihays/RAG-GNN"
+license: MIT
+authors:
+  - family-names: "Hays"
+    given-names: "Hasi"
+    orcid: "https://orcid.org/0000-0003-0843-050X"
+    affiliation: "Department of Chemical Engineering, University of Arkansas"
+    email: "hasih@uark.edu"
+  - family-names: "Richardson"
+    given-names: "William J."
+    orcid: "https://orcid.org/0000-0001-8678-9716"
+    affiliation: "Department of Chemical Engineering, University of Arkansas"
+keywords:
+  - graph neural networks
+  - retrieval augmented generation
+  - biological networks
+  - network embedding
+  - precision medicine
+  - bioinformatics
+  - cancer signaling
+abstract: >-
+  RAG-GNN is a framework for integrating graph neural network representations
+  with retrieval-augmented generation for biological network modeling and
+  precision medicine applications. It combines network topology encoding via
+  GNN message passing with dynamically retrieved literature-derived knowledge
+  to create embeddings that capture both structural and functional relationships.
