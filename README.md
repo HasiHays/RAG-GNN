@@ -175,12 +175,6 @@ Benchmarking on cancer signaling networks reveals task-specific strengths:
 
 **Key finding:** RAG-GNN is the only method achieving positive silhouette scores for functional clustering, while topology-focused methods excel at link prediction.
 
-## Documentation
-
-- [API Reference](docs/api.md)
-- [Tutorials](docs/tutorials/)
-- [Mathematical Details](docs/math.md)
-
 ## Citation
 
 If you use RAG-GNN in your research, please cite:
