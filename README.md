@@ -1,4 +1,4 @@
-# RAG-GNN: Retrieval-Augmented Graph Neural Networks for Biological Network Analysis
+# RAG-GNN: Integrating Retrieved Knowledge with Graph Neural Networks for Precision Medicine
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -181,7 +181,7 @@ If you use RAG-GNN in your research, please cite:
 
 ```bibtex
 @article{hays2025rag,
-  title={RAG embedding in biological network modeling for precision medicine},
+  title={RAG-GNN: Integrating Retrieved Knowledge with Graph Neural Networks for Precision Medicine},
   author={Hays, Hasi and Richardson, William J.},
   journal={},
   year={2025},
