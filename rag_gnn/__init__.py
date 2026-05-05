@@ -11,12 +11,18 @@ from .retrieval import KnowledgeRetriever
 from .fusion import FusionModule
 from .utils import normalize_adjacency, compute_silhouette
 
-__version__ = "0.1.0"
+try:
+    from .learnable import LearnableRAGGNN
+except ImportError:
+    LearnableRAGGNN = None
+
+__version__ = "0.2.0"
 __author__ = "Hasi Hays"
 __email__ = "hasih@uark.edu"
 
 __all__ = [
     "RAGGNN",
+    "LearnableRAGGNN",
     "GNNEncoder",
     "KnowledgeRetriever",
     "FusionModule",

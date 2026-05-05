@@ -184,5 +184,81 @@ class TestUtils:
         assert score > 0  # Well-separated clusters should have positive score
 
 
+class TestLearnableRAGGNN:
+    """Tests for learnable (PyTorch) RAG-GNN model."""
+
+    @pytest.fixture(autouse=True)
+    def check_torch(self):
+        pytest.importorskip("torch")
+
+    def test_init(self):
+        from rag_gnn import LearnableRAGGNN
+        model = LearnableRAGGNN(hidden_dim=64, doc_dim=32, n_layers=3, k=5)
+        assert model.hidden_dim == 64
+        assert model.doc_dim == 32
+        assert model.k == 5
+
+    def test_forward_shape(self):
+        import torch
+        from rag_gnn import LearnableRAGGNN
+
+        n_nodes, hidden_dim, doc_dim, n_docs, k = 20, 64, 32, 50, 5
+        model = LearnableRAGGNN(hidden_dim=hidden_dim, doc_dim=doc_dim, n_layers=3, k=k)
+
+        A = torch.randn(n_nodes, n_nodes)
+        X = torch.randn(n_nodes, hidden_dim)
+        doc_emb = torch.randn(n_docs, doc_dim)
+
+        fused = model(A, X, doc_emb)
+        assert fused.shape == (n_nodes, hidden_dim)
+
+    def test_forward_return_all(self):
+        import torch
+        from rag_gnn import LearnableRAGGNN
+
+        n_nodes, hidden_dim, doc_dim, n_docs, k = 20, 64, 32, 50, 5
+        model = LearnableRAGGNN(hidden_dim=hidden_dim, doc_dim=doc_dim, n_layers=3, k=k)
+
+        A = torch.randn(n_nodes, n_nodes)
+        X = torch.randn(n_nodes, hidden_dim)
+        doc_emb = torch.randn(n_docs, doc_dim)
+
+        fused, gnn, ctx, scores, topk_idx, gate = model(A, X, doc_emb, return_all=True)
+        assert fused.shape == (n_nodes, hidden_dim)
+        assert gnn.shape == (n_nodes, hidden_dim)
+        assert ctx.shape == (n_nodes, doc_dim)
+        assert scores.shape == (n_nodes, n_docs)
+        assert topk_idx.shape == (n_nodes, k)
+        assert gate.shape == (n_nodes, hidden_dim)
+
+    def test_gate_range(self):
+        import torch
+        from rag_gnn import LearnableRAGGNN
+
+        model = LearnableRAGGNN(hidden_dim=32, doc_dim=16, k=3)
+        A = torch.randn(10, 10)
+        X = torch.randn(10, 32)
+        doc_emb = torch.randn(20, 16)
+
+        _, _, _, _, _, gate = model(A, X, doc_emb, return_all=True)
+        assert (gate >= 0).all() and (gate <= 1).all()
+
+    def test_gradient_flow(self):
+        import torch
+        from rag_gnn import LearnableRAGGNN
+
+        model = LearnableRAGGNN(hidden_dim=32, doc_dim=16, k=3)
+        A = torch.randn(10, 10)
+        X = torch.randn(10, 32)
+        doc_emb = torch.randn(20, 16)
+
+        fused = model(A, X, doc_emb)
+        loss = fused.sum()
+        loss.backward()
+
+        for name, param in model.named_parameters():
+            assert param.grad is not None, f"No gradient for {name}"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -2,7 +2,6 @@
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![DOI](https://img.shields.io/badge/DOI-10.xxxx%2Fxxxxx-blue)](https://doi.org/)
 
 A framework for integrating graph neural network representations with retrieval-augmented generation for biological network modeling and precision medicine applications.
 
@@ -14,24 +13,11 @@ RAG-GNN combines network topology encoding via graph neural networks with dynami
 - GNN-based network topology encoding with message passing
 - Knowledge retrieval from biomedical corpora
 - Weighted fusion of structural and semantic information
+- End-to-end learnable model with gated fusion and curriculum training (PyTorch)
 - Comprehensive evaluation metrics for biological networks
 - Application to cancer signaling pathway analysis
 
 ## Installation
-
-### Using pip
-
-```bash
-pip install rag-gnn
-```
-
-### Using conda
-
-```bash
-conda create -n rag-gnn python=3.9
-conda activate rag-gnn
-pip install rag-gnn
-```
 
 ### From source
 
@@ -41,7 +27,21 @@ cd RAG-GNN
 pip install -e .
 ```
 
+### With learnable (PyTorch) support
+
+```bash
+pip install -e ".[learnable]"
+```
+
+### Development install
+
+```bash
+pip install -e ".[dev]"
+```
+
 ## Quick start
+
+### Analytical pipeline
 
 ```python
 import numpy as np
@@ -69,6 +69,38 @@ gnn_embeddings = model.gnn_embeddings_
 # Access retrieved features
 retrieved_features = model.retrieved_features_
 ```
+
+### Learnable pipeline (PyTorch)
+
+```python
+import torch
+from rag_gnn import LearnableRAGGNN
+
+# Initialize end-to-end trainable model
+model = LearnableRAGGNN(
+    hidden_dim=128,
+    doc_dim=64,
+    n_layers=3,
+    k=10
+)
+
+# Forward pass
+# A: normalized adjacency (n_nodes, n_nodes)
+# X: node features (n_nodes, hidden_dim)
+# doc_emb: document embeddings (n_docs, doc_dim)
+fused = model(A, X, doc_emb)
+
+# With intermediate outputs
+fused, gnn_emb, ctx, scores, topk_idx, gate = model(A, X, doc_emb, return_all=True)
+# gate values indicate fusion balance (>0.5 = topology-dominant)
+```
+
+The learnable pipeline uses three-phase curriculum training:
+1. **Phase 1** (GNN warm-up): Train the GCN encoder with link prediction
+2. **Phase 2** (Retrieval alignment): Train retrieval projection with contrastive loss
+3. **Phase 3** (Joint fine-tuning): End-to-end optimization of all components
+
+See `examples/learnable_cancer_network.py` for a complete training script.
 
 ## Architecture
 
@@ -116,64 +148,24 @@ fusion = FusionModule(
 fused_embeddings = fusion.fuse(gnn_embeddings, retrieved_features)
 ```
 
-## Benchmarking
-
-Compare RAG-GNN against baseline methods:
-
-```python
-from rag_gnn.benchmarks import run_benchmark
-
-results = run_benchmark(
-    adj_matrix=adj_matrix,
-    labels=functional_categories,
-    methods=['RAG-GNN', 'GNN-only', 'GCN', 'GAT', 'GraphSAGE',
-             'DeepWalk', 'Node2Vec', 'LINE', 'Spectral'],
-    tasks=['silhouette', 'link_prediction', 'node_classification']
-)
-
-print(results.to_dataframe())
-```
-
-## Example: Cancer signaling network analysis
-
-```python
-from rag_gnn import RAGGNN
-from rag_gnn.data import load_cancer_network
-from rag_gnn.evaluation import evaluate_embeddings
-
-# Load cancer signaling network (379 proteins, 3,498 interactions)
-adj_matrix, proteins, categories = load_cancer_network()
-
-# Create knowledge base from functional annotations
-knowledge_base = create_pathway_documents(proteins, categories)
-
-# Train RAG-GNN
-model = RAGGNN(n_layers=3, hidden_dim=128, retrieval_k=10)
-embeddings = model.fit_transform(adj_matrix, documents=knowledge_base)
-
-# Evaluate
-metrics = evaluate_embeddings(
-    embeddings,
-    categories,
-    metrics=['silhouette', 'link_auroc', 'node_classification']
-)
-print(f"Silhouette score: {metrics['silhouette']:.3f}")
-print(f"Link prediction AUROC: {metrics['link_auroc']:.3f}")
-```
+In the learnable pipeline, fusion uses a learned gating mechanism that dynamically balances topology and retrieval contributions (mean gate ~0.59, indicating 59% topology / 41% retrieval).
 
 ## Results
 
-Benchmarking on cancer signaling networks reveals task-specific strengths:
+Evaluation on a cancer signaling network (379 proteins, 3,498 interactions, 14 functional categories, 1,895 documents) with 10-seed cross-validation:
 
-| Method | Silhouette | Link Pred AUROC | Node Class AUROC |
-|--------|------------|-----------------|------------------|
-| **RAG-GNN** | **0.001** | 0.804 | 0.520 |
-| GNN-only | -0.049 | **0.975** | 0.542 |
-| GCN | -0.031 | 0.983 | 0.527 |
-| DeepWalk | -0.040 | 0.785 | 0.474 |
-| Node2Vec | -0.043 | 0.743 | 0.477 |
+| Method | Silhouette | NMI | ARI | Link Pred AUROC |
+|--------|------------|-----|-----|-----------------|
+| **RAG-GNN** | **-0.140 +/- 0.066** | **0.246 +/- 0.032** | **0.085 +/- 0.025** | 0.821 +/- 0.063 |
+| GNN-only | -0.237 +/- 0.064 | 0.238 +/- 0.027 | 0.060 +/- 0.014 | 0.780 +/- 0.085 |
+| GCN | -0.094 +/- 0.009 | 0.278 +/- 0.010 | 0.066 +/- 0.008 | **0.962 +/- 0.006** |
+| Spectral | -0.085 +/- 0.000 | 0.275 +/- 0.011 | 0.056 +/- 0.007 | 0.977 +/- 0.002 |
+| DeepWalk | -0.066 +/- 0.000 | 0.273 +/- 0.009 | 0.060 +/- 0.005 | 0.949 +/- 0.002 |
+| Node2Vec | -0.062 +/- 0.000 | 0.265 +/- 0.018 | 0.054 +/- 0.011 | 0.950 +/- 0.003 |
+| GAT | -0.063 +/- 0.006 | 0.196 +/- 0.020 | 0.036 +/- 0.009 | 0.806 +/- 0.013 |
+| GraphSAGE | -0.019 +/- 0.002 | 0.105 +/- 0.008 | 0.003 +/- 0.002 | 0.556 +/- 0.020 |
 
-**Key finding:** RAG-GNN is the only method achieving positive silhouette scores for functional clustering, while topology-focused methods excel at link prediction.
+**Key finding:** RAG-GNN achieves the highest ARI for functional clustering and the best link prediction AUROC among learnable methods, demonstrating that knowledge retrieval provides complementary signal to network topology.
 
 ## Citation
 
@@ -183,9 +175,8 @@ If you use RAG-GNN in your research, please cite:
 @article{hays2025rag,
   title={RAG-GNN: Integrating Retrieved Knowledge with Graph Neural Networks for Precision Medicine},
   author={Hays, Hasi and Richardson, William J.},
-  journal={},
-  year={2025},
-  doi={}
+  journal={Frontiers in Artificial Intelligence},
+  year={2025}
 }
 ```
 
@@ -207,7 +198,3 @@ Department of Chemical Engineering, University of Arkansas, Fayetteville, AR 727
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting a pull request.

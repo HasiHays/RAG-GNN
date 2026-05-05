@@ -16,8 +16,10 @@ import warnings
 import os
 warnings.filterwarnings('ignore')
 
-# Create output directory
-os.makedirs('figures', exist_ok=True)
+BASE = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE, '..', 'data')
+OUTPUT_DIR = os.path.join(BASE, '..', 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 np.random.seed(42)
 
@@ -67,10 +69,10 @@ print("="*70)
 print("\n[1/5] Loading network data...")
 
 # Load network
-G = nx.read_edgelist('figures/protein_network.edgelist')
+G = nx.read_edgelist(os.path.join(DATA_DIR, 'protein_network.edgelist'))
 
 # Load annotations
-protein_df = pd.read_csv('figures/protein_annotations.csv')
+protein_df = pd.read_csv(os.path.join(DATA_DIR, 'protein_annotations.csv'))
 proteins = protein_df['protein'].tolist()
 categories = protein_df['category'].tolist()
 category_ids = protein_df['category_id'].tolist()
@@ -365,11 +367,11 @@ plt.tight_layout()
 # =====================================================
 # Save figure
 # =====================================================
-plt.savefig('figures/Fig-4-DDR1-Network.pdf', dpi=300, bbox_inches='tight')
-plt.savefig('figures/Fig-4-DDR1-Network.png', dpi=300, bbox_inches='tight')
-plt.savefig('figures/Fig-4-DDR1-Network.svg', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(OUTPUT_DIR, 'Fig-4-DDR1-Network.pdf'), dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(OUTPUT_DIR, 'Fig-4-DDR1-Network.png'), dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(OUTPUT_DIR, 'Fig-4-DDR1-Network.svg'), dpi=300, bbox_inches='tight')
 
-print("\n  Saved: figures/Fig-4-DDR1-Network.pdf/png/svg")
+print(f"\n  Saved: {OUTPUT_DIR}/Fig-4-DDR1-Network.pdf/png/svg")
 
 plt.close()
 
@@ -385,7 +387,7 @@ subnetwork_data = {
 }
 
 import json
-with open('figures/Fig-4-subnetwork-data.json', 'w') as f:
+with open(os.path.join(OUTPUT_DIR, 'Fig-4-subnetwork-data.json'), 'w') as f:
     json.dump(subnetwork_data, f, indent=2)
 
 print("\n" + "="*70)

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rag-gnn"
-version = "0.1.0"
+version = "0.2.0"
 description = "Retrieval-Augmented Graph Neural Networks for Biological Network Analysis"
 readme = "README.md"
 license = {text = "MIT"}
@@ -47,6 +47,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+learnable = [
+    "torch>=1.9.0",
+]
 dev = [
     "pytest>=6.0.0",
     "pytest-cov>=2.0.0",

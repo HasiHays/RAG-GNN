@@ -138,6 +138,7 @@ cython_debug/
 # OS
 .DS_Store
 Thumbs.db
+.notebook/
 
 # Data files (large)
 *.pkl
@@ -146,6 +147,7 @@ Thumbs.db
 *.npz
 *.h5
 *.hdf5
+!results_learnable/*.npy
 
 # Figures (generated)
 *.png

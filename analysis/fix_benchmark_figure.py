@@ -17,8 +17,14 @@ from sklearn.decomposition import TruncatedSVD, PCA
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 import json
+import os
 import warnings
 warnings.filterwarnings('ignore')
+
+BASE = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE, '..', 'data')
+OUTPUT_DIR = os.path.join(BASE, '..', 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 np.random.seed(42)
 
@@ -58,11 +64,11 @@ plt.rcParams.update({
 print("Loading benchmark results...")
 
 # Load results
-results_df = pd.read_csv('figures/fair_benchmark_results.csv')
+results_df = pd.read_csv(os.path.join(OUTPUT_DIR, 'fair_benchmark_results.csv'))
 
 # Load network and embeddings for visualization
-G = nx.read_edgelist('figures/protein_network.edgelist')
-protein_df = pd.read_csv('figures/protein_annotations.csv')
+G = nx.read_edgelist(os.path.join(DATA_DIR, 'protein_network.edgelist'))
+protein_df = pd.read_csv(os.path.join(DATA_DIR, 'protein_annotations.csv'))
 proteins = protein_df['protein'].tolist()
 categories = protein_df['category'].tolist()
 category_ids = protein_df['category_id'].tolist()
@@ -279,13 +285,13 @@ for bar, val in zip(bars8, rag_deltas):
 plt.tight_layout()
 
 # Save figures
-fig.savefig('figures/Fig-Benchmark.pdf', format='pdf', dpi=300, bbox_inches='tight')
-fig.savefig('figures/Fig-Benchmark.svg', format='svg', dpi=300, bbox_inches='tight')
-fig.savefig('figures/Fig-Benchmark.png', format='png', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-Benchmark.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-Benchmark.svg'), format='svg', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-Benchmark.png'), format='png', dpi=300, bbox_inches='tight')
 
-print("✓ Saved: figures/Fig-Benchmark.pdf")
-print("✓ Saved: figures/Fig-Benchmark.svg")
-print("✓ Saved: figures/Fig-Benchmark.png")
+print(f"✓ Saved: {OUTPUT_DIR}/Fig-Benchmark.pdf")
+print(f"✓ Saved: {OUTPUT_DIR}/Fig-Benchmark.svg")
+print(f"✓ Saved: {OUTPUT_DIR}/Fig-Benchmark.png")
 
 plt.close()
 print("Done!")

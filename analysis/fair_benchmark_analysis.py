@@ -22,8 +22,14 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 from scipy.stats import spearmanr
 import json
+import os
 import warnings
 warnings.filterwarnings('ignore')
+
+BASE = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE, '..', 'data')
+OUTPUT_DIR = os.path.join(BASE, '..', 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 np.random.seed(42)
 
@@ -69,8 +75,8 @@ print("="*80)
 # =============================================================================
 print("\n[1/8] Loading data...")
 
-G = nx.read_edgelist('figures/protein_network.edgelist')
-protein_df = pd.read_csv('figures/protein_annotations.csv')
+G = nx.read_edgelist(os.path.join(DATA_DIR, 'protein_network.edgelist'))
+protein_df = pd.read_csv(os.path.join(DATA_DIR, 'protein_annotations.csv'))
 proteins = protein_df['protein'].tolist()
 categories = protein_df['category'].tolist()
 category_ids = protein_df['category_id'].tolist()
@@ -546,13 +552,13 @@ for bar, val in zip(bars8, rag_deltas):
 plt.tight_layout()
 
 # Save figures in multiple formats
-fig.savefig('figures/Fig-Benchmark.pdf', format='pdf', dpi=300, bbox_inches='tight')
-fig.savefig('figures/Fig-Benchmark.svg', format='svg', dpi=300, bbox_inches='tight')
-fig.savefig('figures/Fig-Benchmark.png', format='png', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-Benchmark.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-Benchmark.svg'), format='svg', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-Benchmark.png'), format='png', dpi=300, bbox_inches='tight')
 
-print("  ✓ Saved: figures/Fig-Benchmark.pdf")
-print("  ✓ Saved: figures/Fig-Benchmark.svg")
-print("  ✓ Saved: figures/Fig-Benchmark.png")
+print(f"  ✓ Saved: {OUTPUT_DIR}/Fig-Benchmark.pdf")
+print(f"  ✓ Saved: {OUTPUT_DIR}/Fig-Benchmark.svg")
+print(f"  ✓ Saved: {OUTPUT_DIR}/Fig-Benchmark.png")
 
 plt.close()
 
@@ -591,13 +597,13 @@ benchmark_results = {
     }
 }
 
-with open('figures/fair_benchmark_results.json', 'w') as f:
+with open(os.path.join(OUTPUT_DIR, 'fair_benchmark_results.json'), 'w') as f:
     json.dump(benchmark_results, f, indent=2)
 
-results_df.to_csv('figures/fair_benchmark_results.csv', index=False)
+results_df.to_csv(os.path.join(OUTPUT_DIR, 'fair_benchmark_results.csv'), index=False)
 
-print("  ✓ Saved: figures/fair_benchmark_results.json")
-print("  ✓ Saved: figures/fair_benchmark_results.csv")
+print(f"  ✓ Saved: {OUTPUT_DIR}/fair_benchmark_results.json")
+print(f"  ✓ Saved: {OUTPUT_DIR}/fair_benchmark_results.csv")
 
 # Print summary table for manuscript
 print("\n" + "="*80)

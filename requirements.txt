@@ -6,6 +6,8 @@ networkx>=2.6.0
 pandas>=1.3.0
 matplotlib>=3.4.0
 
-# Optional: for enhanced functionality
-# torch>=1.9.0  # For GPU acceleration (optional)
-# transformers>=4.0.0  # For advanced text embeddings (optional)
+# Required for learnable RAG-GNN (LearnableRAGGNN)
+torch>=1.9.0
+
+# Optional: for advanced text embeddings
+# transformers>=4.0.0

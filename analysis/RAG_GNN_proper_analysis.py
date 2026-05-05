@@ -31,8 +31,10 @@ import warnings
 import os
 warnings.filterwarnings('ignore')
 
-# Create output directory
-os.makedirs('figures', exist_ok=True)
+BASE = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE, '..', 'data')
+OUTPUT_DIR = os.path.join(BASE, '..', 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Set random seeds for reproducibility
 np.random.seed(42)
@@ -83,10 +85,10 @@ print("="*70)
 print("\n[1/8] Loading network data...")
 
 # Load network
-G = nx.read_edgelist('figures/protein_network.edgelist')
+G = nx.read_edgelist(os.path.join(DATA_DIR, 'protein_network.edgelist'))
 
 # Load annotations
-protein_df = pd.read_csv('figures/protein_annotations.csv')
+protein_df = pd.read_csv(os.path.join(DATA_DIR, 'protein_annotations.csv'))
 proteins = protein_df['protein'].tolist()
 categories = protein_df['category'].tolist()
 category_ids = protein_df['category_id'].tolist()
@@ -521,10 +523,10 @@ ax_e.invert_yaxis()
 plt.tight_layout()
 
 # Save Figure 1
-fig.savefig('figures/Fig-1-RAG-Embeddings.pdf', format='pdf', dpi=300, bbox_inches='tight')
-fig.savefig('figures/Fig-1-RAG-Embeddings.png', format='png', dpi=300, bbox_inches='tight')
-fig.savefig('figures/Fig-1-RAG-Embeddings.svg', format='svg', dpi=300, bbox_inches='tight')
-print("  Saved: figures/Fig-1-RAG-Embeddings.pdf/png/svg")
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-1-RAG-Embeddings.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-1-RAG-Embeddings.png'), format='png', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-1-RAG-Embeddings.svg'), format='svg', dpi=300, bbox_inches='tight')
+print(f"  Saved: {OUTPUT_DIR}/Fig-1-RAG-Embeddings.pdf/png/svg")
 plt.close()
 
 # =====================================================
@@ -621,10 +623,10 @@ ax.set_title('Document retrieval performance for protein queries', fontsize=12, 
 plt.tight_layout()
 
 # Save Figure 2
-fig.savefig('figures/Fig-2-Retrieval-Performance.pdf', format='pdf', dpi=300, bbox_inches='tight')
-fig.savefig('figures/Fig-2-Retrieval-Performance.png', format='png', dpi=300, bbox_inches='tight')
-fig.savefig('figures/Fig-2-Retrieval-Performance.svg', format='svg', dpi=300, bbox_inches='tight')
-print("  Saved: figures/Fig-2-Retrieval-Performance.pdf/png/svg")
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-2-Retrieval-Performance.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-2-Retrieval-Performance.png'), format='png', dpi=300, bbox_inches='tight')
+fig.savefig(os.path.join(OUTPUT_DIR, 'Fig-2-Retrieval-Performance.svg'), format='svg', dpi=300, bbox_inches='tight')
+print(f"  Saved: {OUTPUT_DIR}/Fig-2-Retrieval-Performance.pdf/png/svg")
 plt.close()
 
 # =====================================================
@@ -655,7 +657,7 @@ summary = {
     }
 }
 
-with open('figures/analysis_summary.json', 'w') as f:
+with open(os.path.join(OUTPUT_DIR, 'analysis_summary.json'), 'w') as f:
     json.dump(summary, f, indent=2)
 
 print(f"\nNetwork: {n_nodes} proteins, {G.number_of_edges()} interactions")
@@ -666,5 +668,5 @@ print(f"  Improvement: {sil_rag - sil_gnn:+.4f}")
 print(f"\nRetrieval Performance (mAP):")
 for method, ap in results.items():
     print(f"  {method:20s}: {ap:.4f}")
-print(f"\nFigures saved to figures/ directory")
+print(f"\nFigures saved to {OUTPUT_DIR}")
 print("="*70)

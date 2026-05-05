@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="rag-gnn",
-    version="0.1.0",
+    version="0.2.0",
     author="Hasi Hays",
     author_email="hasih@uark.edu",
     description="Retrieval-Augmented Graph Neural Networks for Biological Network Analysis",
@@ -43,6 +43,9 @@ setup(
         "matplotlib>=3.4.0",
     ],
     extras_require={
+        "learnable": [
+            "torch>=1.9.0",
+        ],
         "dev": [
             "pytest>=6.0.0",
             "pytest-cov>=2.0.0",
