@@ -1,3 +1,9 @@
+---
+noteId: "4108c8004e2f11f1a2570378ad05fce2"
+tags: []
+
+---
+
 # RAG-GNN: Integrating Retrieved Knowledge with Graph Neural Networks for Precision Medicine
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -156,8 +162,8 @@ Evaluation on a cancer signaling network (379 proteins, 3,498 interactions, 14 f
 
 | Method | Silhouette | NMI | ARI | Link Pred AUROC |
 |--------|------------|-----|-----|-----------------|
-| **RAG-GNN** | **-0.140 +/- 0.066** | **0.246 +/- 0.032** | **0.085 +/- 0.025** | 0.821 +/- 0.063 |
-| GNN-only | -0.237 +/- 0.064 | 0.238 +/- 0.027 | 0.060 +/- 0.014 | 0.780 +/- 0.085 |
+| **RAG-GNN** | **-0.144 +/- 0.066** | **0.244 +/- 0.032** | **0.083 +/- 0.029** | 0.822 +/- 0.063 |
+| GNN-only | -0.237 +/- 0.065 | 0.242 +/- 0.032 | 0.061 +/- 0.017 | 0.774 +/- 0.095 |
 | GCN | -0.094 +/- 0.009 | 0.278 +/- 0.010 | 0.066 +/- 0.008 | **0.962 +/- 0.006** |
 | Spectral | -0.085 +/- 0.000 | 0.275 +/- 0.011 | 0.056 +/- 0.007 | 0.977 +/- 0.002 |
 | DeepWalk | -0.066 +/- 0.000 | 0.273 +/- 0.009 | 0.060 +/- 0.005 | 0.949 +/- 0.002 |

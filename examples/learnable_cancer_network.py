@@ -222,9 +222,12 @@ p2i = {p: i for i, p in enumerate(proteins)}
 train_tgts = [p2i[p] for p in target_years if target_years[p] < 2018 and p in p2i]
 test_tgts = [p2i[p] for p in target_years if target_years[p] >= 2020 and p in p2i]
 all_tgts = set(train_tgts + test_tgts)
-tgt_labels = np.zeros(n_nodes)
+tgt_train_labels = np.zeros(n_nodes)
+for i in train_tgts:
+    tgt_train_labels[i] = 1.0
+tgt_all_labels = np.zeros(n_nodes)
 for i in all_tgts:
-    tgt_labels[i] = 1.0
+    tgt_all_labels[i] = 1.0
 print(f"  Targets: {len(train_tgts)} train, {len(test_tgts)} test")
 
 
@@ -328,7 +331,7 @@ def train_seed(seed):
     X = torch.FloatTensor(X_np).to(DEVICE)
     doc_t = torch.FloatTensor(doc_emb_np).to(DEVICE)
     dp_t = torch.LongTensor(doc_prot_idx).to(DEVICE)
-    tgt_t = torch.FloatTensor(tgt_labels).to(DEVICE)
+    tgt_t = torch.FloatTensor(tgt_train_labels).to(DEVICE)
 
     tr_pos, tr_neg, te_pos, te_neg = make_edges(adj_matrix, seed)
 
@@ -468,9 +471,9 @@ def train_seed(seed):
             precs.append(hits / K)
         ret_map = np.mean(precs)
 
-        # Target AUROC
+        # Target AUROC (evaluated on all targets, but model only trained on train targets)
         tgt_sc = model.target_head(fused).squeeze(-1).cpu().numpy()
-        tgt_auroc = roc_auc_score(tgt_labels, tgt_sc) if tgt_labels.sum() > 0 else 0.5
+        tgt_auroc = roc_auc_score(tgt_all_labels, tgt_sc) if tgt_all_labels.sum() > 0 else 0.5
 
         # Temporal AUROC
         if len(test_tgts) > 0:
@@ -577,6 +580,11 @@ def mi_est(emb, labs, n_bins=10):
     return mi / min(emb.shape[1], 30)
 
 def decomp_boot(fused, gnn, ctx, labs, n_boot=200):
+    """Heuristic information decomposition using minimum-redundancy principle.
+
+    Uses I_shared = min(I_gnn, I_ctx) as an upper bound on redundancy,
+    then derives unique and synergy terms by subtraction.
+    """
     n = len(labs)
     np.random.seed(42)
     rs = []
@@ -586,10 +594,10 @@ def decomp_boot(fused, gnn, ctx, labs, n_boot=200):
         mi_g = mi_est(gnn[idx], labs[idx])
         mi_c = mi_est(ctx[idx], labs[idx])
         t = max(mi_f, 1e-10)
-        ug = max(0, mi_g - 0.5*mi_c) / t
-        uc = max(0, mi_c - 0.3*mi_g) / t
-        sh = max(0, (mi_g + mi_c - mi_f)*0.5) / t
-        sy = max(0, 1-ug-uc-sh)
+        sh = min(mi_g, mi_c) / t
+        ug = max(0, mi_g / t - sh)
+        uc = max(0, mi_c / t - sh)
+        sy = max(0, 1.0 - ug - uc - sh)
         rs.append({'topo': ug, 'ret': uc, 'shared': sh, 'synergy': sy, 'total': mi_f})
     df = pd.DataFrame(rs)
     return {c: {'mean': float(np.mean(df[c])), 'std': float(np.std(df[c])),
@@ -623,7 +631,7 @@ def run_cf(cond):
         if cond == 'proper':
             d = doc_cf
         elif cond == 'random':
-            d = doc_cf[torch.randperm(doc_cf.shape[0])]
+            d = torch.randn_like(doc_cf)
         elif cond == 'shuffled':
             d = doc_cf[torch.randperm(doc_cf.shape[0])]
         elif cond == 'adversarial':
