@@ -1,3 +1,9 @@
+---
+noteId: "2890a7204e4311f1a2570378ad05fce2"
+tags: []
+
+---
+
 # Data
 
 This folder contains sample data and instructions for obtaining the datasets used in the paper.
@@ -12,7 +18,7 @@ The cancer signaling network used in the paper was constructed from:
 
 2. **STRING database** (https://string-db.org)
    - Protein-protein interaction scores
-   - Filtered for high-confidence interactions (score > 700)
+   - Filtered for medium-confidence interactions (combined score > 400, i.e., > 0.4)
    - Results in 3,498 interactions
 
 ## Downloading the data
@@ -36,7 +42,7 @@ python scripts/download_data.py
    params = {
        "identifiers": "%0d".join(proteins),
        "species": 9606,  # Human
-       "required_score": 700
+       "required_score": 400
    }
    response = requests.get(url, params=params)
    ```
