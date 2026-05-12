@@ -257,9 +257,9 @@ p2i = {p: i for i, p in enumerate(proteins)}
 train_tgts = [p2i[p] for p in target_years if target_years[p] < 2018 and p in p2i]
 test_tgts = [p2i[p] for p in target_years if target_years[p] >= 2020 and p in p2i]
 all_tgts = set(train_tgts + test_tgts)
-tgt_labels = np.zeros(n_nodes)
-for i in all_tgts:
-    tgt_labels[i] = 1.0
+tgt_train_labels = np.zeros(n_nodes)
+for i in train_tgts:
+    tgt_train_labels[i] = 1.0
 
 # ============================================================================
 # Fig-3: Train one seed for retrieval PR curves
@@ -336,7 +336,7 @@ X_np[:, 3:] = np.random.randn(n_nodes, HIDDEN_DIM - 3) * 0.01
 X = torch.FloatTensor(X_np).to(DEVICE)
 doc_t = torch.FloatTensor(doc_emb_np).to(DEVICE)
 dp_t = torch.LongTensor(doc_prot_idx).to(DEVICE)
-tgt_t = torch.FloatTensor(tgt_labels).to(DEVICE)
+tgt_t = torch.FloatTensor(tgt_train_labels).to(DEVICE)
 
 tr_pos, tr_neg, te_pos, te_neg = make_edges(adj_matrix, seed)
 model = RAGGNN_V3().to(DEVICE)
@@ -471,28 +471,49 @@ np.random.seed(123)
 random_scores_pr = np.random.rand(len(rag_labels_pr))
 random_labels_pr = rag_labels_pr.copy()
 
+# Compute precision@K for each method (matching manuscript's metric)
+def compute_precision_at_k(score_mat, doc_prot_idx, labels, k=10):
+    cat_docs = {}
+    for d_idx, p_idx in enumerate(doc_prot_idx):
+        cat = labels[p_idx]
+        cat_docs.setdefault(cat, set()).add(d_idx)
+    precs = []
+    for i in range(len(labels)):
+        rel = cat_docs.get(labels[i], set())
+        topk = np.argsort(score_mat[i])[-k:]
+        hits = sum(1 for d in topk if d in rel)
+        precs.append(hits / k)
+    return np.mean(precs)
+
+rag_p10 = compute_precision_at_k(score_matrix, doc_prot_idx, labels, K)
+tfidf_p10 = compute_precision_at_k(tfidf_score_matrix, doc_prot_idx, labels, K)
+topo_p10 = compute_precision_at_k(topo_score_matrix, doc_prot_idx, labels, K)
+random_p10 = compute_precision_at_k(np.random.RandomState(123).rand(n_nodes, len(documents)),
+                                     doc_prot_idx, labels, K)
+
 # Generate Fig-3
 print("\n[4/7] Generating Fig-3 (Retrieval Performance)...")
 fig3, ax3 = plt.subplots(figsize=(8, 6))
 
 methods_pr = {
     'RAG-GNN (ours)': {'labels': rag_labels_pr, 'scores': rag_scores_pr,
-                       'color': SET2_COLORS[0], 'lw': 2.5},
+                       'color': SET2_COLORS[0], 'lw': 2.5, 'p10': rag_p10},
     'Topology-only': {'labels': topo_labels_pr, 'scores': topo_scores_pr,
-                      'color': SET2_COLORS[1], 'lw': 2},
+                      'color': SET2_COLORS[1], 'lw': 2, 'p10': topo_p10},
     'TF-IDF': {'labels': tfidf_labels_pr, 'scores': tfidf_scores_pr,
-               'color': SET2_COLORS[2], 'lw': 2},
+               'color': SET2_COLORS[2], 'lw': 2, 'p10': tfidf_p10},
     'Random': {'labels': random_labels_pr, 'scores': random_scores_pr,
-               'color': SET2_COLORS[7], 'lw': 1.5, 'ls': '--'},
+               'color': SET2_COLORS[7], 'lw': 1.5, 'ls': '--', 'p10': random_p10},
 }
 
 fig3_maps = {}
 for method_name, config in methods_pr.items():
     precision, recall, _ = precision_recall_curve(config['labels'], config['scores'])
     ap = average_precision_score(config['labels'], config['scores'])
-    fig3_maps[method_name] = ap
+    p10 = config['p10']
+    fig3_maps[method_name] = {'ap': ap, 'p10': p10}
     ls = config.get('ls', '-')
-    ax3.plot(recall, precision, label=f"{method_name} (mAP={ap:.3f})",
+    ax3.plot(recall, precision, label=f"{method_name} (AP={ap:.3f}, P(10)={p10:.3f})",
              color=config['color'], linewidth=config['lw'], linestyle=ls, alpha=0.9)
 
 ax3.set_xlabel('Recall', fontsize=12)
@@ -512,8 +533,8 @@ fig3.savefig(os.path.join(OUTPUT_DIR, 'Fig-3.pdf'),
 fig3.savefig(os.path.join(OUTPUT_DIR, 'Fig-3.svg'),
              format='svg', dpi=300, bbox_inches='tight')
 print("  Saved Fig-3.pdf and Fig-3.svg")
-for mn, ap in fig3_maps.items():
-    print(f"    {mn}: mAP={ap:.3f}")
+for mn, vals in fig3_maps.items():
+    print(f"    {mn}: AP={vals['ap']:.3f}, P@10={vals['p10']:.3f}")
 plt.close()
 
 # ============================================================================
